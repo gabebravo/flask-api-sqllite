@@ -4,3 +4,4 @@
 .vscode
 Pipfile.lock
 __pycache__
+data.db
