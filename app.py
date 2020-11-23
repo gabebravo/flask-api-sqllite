@@ -1,4 +1,5 @@
 from security import authenticate, identity
+from user import UserRegister
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
 from flask_jwt import JWT, jwt_required
@@ -7,6 +8,7 @@ from flask_jwt import JWT, jwt_required
 app = Flask(__name__)
 app.secret_key = 'yowzers'  # in produciton make this an env var - DO NOT EXPOSE
 api = Api(app)
+
 jwt = JWT(app, authenticate, identity)  # this will forward to the /auth route
 # first calls authenticate, gets JWT, and then forwards it to identity
 
@@ -74,6 +76,7 @@ class Item(Resource):
 
 api.add_resource(ItemList, '/items')
 api.add_resource(Item, '/item', '/item/<string:name>')
+api.add_resource(UserRegister, '/register')
 
 if __name__ == '__main__':
     # important to mention debug=True, defaults to port:5000
