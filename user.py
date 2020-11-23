@@ -5,38 +5,8 @@ from dataclasses import dataclass
 from typing import Union
 
 
-class UserRegister(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument('username',
-                        type=str,
-                        required=True,
-                        help="This field cannot be left blank!"
-                        )
-
-    parser.add_argument('password',
-                        type=str,
-                        required=True,
-                        help="This field cannot be left blank!"
-                        )
-
-    def post(self):
-        data = UserRegister.parser.parse_args()  # parsed request payload
-        connection = sqlite3.connect('data.db')  # db file
-        cursor = connection.cursor()
-
-        # NULL here in lieu of id
-        insert_query = 'INSERT INTO users VALUES (NULL, ?, ?)'
-        cursor.execute(insert_query, (data['username'], data['password']))
-
-        connection.commit()  # tells sql to save to db
-        connection.close()  # tells sql to close db connection
-
-        return {"message": "User created successfully"}, 201
-
-
 @dataclass
 class User:
-    id: int
     username: str
     password: str
 
@@ -81,3 +51,36 @@ class User:
 
         connection.close()
         return user
+
+
+class UserRegister(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('username',
+                        type=str,
+                        required=True,
+                        help="This field cannot be left blank!"
+                        )
+
+    parser.add_argument('password',
+                        type=str,
+                        required=True,
+                        help="This field cannot be left blank!"
+                        )
+
+    def post(self):
+        data = UserRegister.parser.parse_args()  # parsed request payload
+
+        # will return None if user not found
+        if User.find_by_username(data['username']):
+            return {"message": "That user with that username already exists"}, 400
+
+        connection = sqlite3.connect('data.db')  # db file
+        cursor = connection.cursor()
+        # NULL here in lieu of id
+        insert_query = 'INSERT INTO users VALUES (NULL, ?, ?)'
+        cursor.execute(insert_query, (data['username'], data['password']))
+
+        connection.commit()  # tells sql to save to db
+        connection.close()  # tells sql to close db connection
+
+        return {"message": "User created successfully"}, 201
