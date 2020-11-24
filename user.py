@@ -7,12 +7,14 @@ from typing import Union
 
 @dataclass
 class User:
+    id: int
     username: str
     password: str
 
     # print our string object
-    def __repr__(self):
-        return f'<User id:{self.id}, username:{self.username}, password:{self.password}>'
+    @classmethod
+    def __repr__(cls):
+        return f'<User id:{cls.id}, username:{cls.username}, password:{cls.password}>'
 
     # get user in sqlite by useranme
     @classmethod  # denotes class method, self/User references = cls
