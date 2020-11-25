@@ -47,6 +47,15 @@ class Item(Resource):
 
         return row
 
+    @classmethod
+    def insert_item(cls, name: str, price: float):
+        connection = sqlite3.connect('data.db')
+        cursor = connection.cursor()
+        insert_query = 'INSERT INTO items VALUES (?, ?)'
+        cursor.execute(insert_query, (name, price))
+        connection.commit()
+        connection.close()
+
     @jwt_required()  # decorator will do the auth check before accessing the GET
     def get(self, name: str):
         row = self.find_by_name(name)
@@ -62,14 +71,14 @@ class Item(Resource):
         item = {'name': data['name'], 'price': data['price']}
 
         if row:
+            # 400: problem with request
             return {'message': f"An item with name {row[0]} already exists."}, 400
 
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-        insert_query = 'INSERT INTO items VALUES (?, ?)'
-        cursor.execute(insert_query, (item['name'], item['price']))
-        connection.commit()
-        connection.close()
+        try:
+            self.insert_item(item['name'], item['price'])
+        except:
+            # 500: Internal server error - problem with server
+            return {'message': 'An error occurred inserting item.'}, 500
 
         return {"item": item}, 201
 
