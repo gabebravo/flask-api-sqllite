@@ -16,7 +16,7 @@ class ItemList(Resource):
         connection.close()
 
         if len(rows) > 0:
-            return {'items': list(map(lambda row: {'item': {'name': row[0], 'price': row[1]}}, rows))}, 200
+            return {'items': list(map(lambda row: {'name': row[0], 'price': row[1]}, rows))}, 200
         return {'message': 'There are no Items at this time'}, 400
 
 
@@ -71,16 +71,17 @@ class Item(Resource):
         connection.commit()
         connection.close()
 
-        return item, 201
+        return {"item": item}, 201
 
-    def delete(self):
-        global items  # this is used for overwriting the global var with assignment below
-        data = request.get_json()  # entire request payload, not parsed
-        print(data)
-        items = list(
-            filter(lambda item: item['name'] != data['name'], items))
+    def delete(self, name: str):
+        connection = sqlite3.connect('data.db')
+        cursor = connection.cursor()
+        delete_query = 'DELETE FROM items WHERE name=?'
+        cursor.execute(delete_query, (name,))
+        connection.commit()
+        connection.close()
 
-        return {'message': f"Items deleted"}, 200
+        return {'message': f'Item {name} has been deleted'}, 201
 
     def put(self):
         data = Item.parser.parse_args()
