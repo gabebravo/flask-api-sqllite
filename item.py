@@ -56,6 +56,15 @@ class Item(Resource):
         connection.commit()
         connection.close()
 
+    @classmethod
+    def update_item(cls, name: str, price: float):
+        connection = sqlite3.connect('data.db')
+        cursor = connection.cursor()
+        insert_query = 'UPDATE items SET price=? WHERE name=?'
+        cursor.execute(insert_query, (price, name))
+        connection.commit()
+        connection.close()
+
     @jwt_required()  # decorator will do the auth check before accessing the GET
     def get(self, name: str):
         row = self.find_by_name(name)
@@ -94,12 +103,19 @@ class Item(Resource):
 
     def put(self):
         data = Item.parser.parse_args()
-        item = next(
-            filter(lambda x: x['name'] == data['name'], items), None)
+        item = {'name': data['name'], 'price': data['price']}
 
-        if(item is None):
-            items.append(data)
-        else:
-            item.update(data)  # can simply update the found item
+        row = self.find_by_name(item['name'])
 
-        return data, 201
+        if row is None:  # no match, so add it to the db
+            try:
+                self.insert_item(item['name'], item['price'])
+            except:
+                {'message': 'An error occured while trying to save the item'}, 500
+        else:  # found a match by name, so just update price
+            try:
+                self.update_item(item['name'], item['price'])
+            except:
+                {'message': 'An error occured while trying to update the item'}, 500
+
+        return item, 201
